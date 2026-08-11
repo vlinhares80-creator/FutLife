@@ -45,18 +45,18 @@ var Game;
         GOL: { goalkeeping: 5, passing: 1.5 }
     };
     Game.CLUBS = [
-        { id: 'campinas', name: 'Campinas Atlético', shortName: 'CAC', strength: 58, prestige: 47, rivalId: 'ponte-azul' },
-        { id: 'ponte-azul', name: 'Ponte Azul', shortName: 'PAZ', strength: 60, prestige: 51, rivalId: 'campinas' },
-        { id: 'litoral', name: 'Litoral FC', shortName: 'LIT', strength: 62, prestige: 55, rivalId: 'santos-do-sul' },
-        { id: 'santos-do-sul', name: 'Santos do Sul', shortName: 'SDS', strength: 64, prestige: 58, rivalId: 'litoral' },
-        { id: 'aurora', name: 'Aurora Paulista', shortName: 'AUR', strength: 69, prestige: 67, rivalId: 'capital' },
-        { id: 'capital', name: 'Capital Esporte Clube', shortName: 'CAP', strength: 73, prestige: 75, rivalId: 'aurora' },
-        { id: 'academia', name: 'Academia Verde', shortName: 'ACV', strength: 80, prestige: 84, rivalId: 'imperial' },
-        { id: 'imperial', name: 'Imperial Paulista', shortName: 'IMP', strength: 82, prestige: 88, rivalId: 'academia' },
-        { id: 'lisboa', name: 'Lisboa Navegantes', shortName: 'LNV', strength: 84, prestige: 86, rivalId: 'porto-real' },
-        { id: 'porto-real', name: 'Porto Real', shortName: 'PRT', strength: 83, prestige: 85, rivalId: 'lisboa' },
-        { id: 'madrid', name: 'Madrid Blanco', shortName: 'MDB', strength: 91, prestige: 97, rivalId: 'barcelona' },
-        { id: 'barcelona', name: 'Barcelona Blau', shortName: 'BLB', strength: 90, prestige: 97, rivalId: 'madrid' }
+        { id: 'campinas', name: 'Campinas Atlético', shortName: 'CAC', strength: 58, prestige: 47, rivalId: 'ponte-azul', country: 'Brasil', flag: '🇧🇷', league: 'Liga Nacional B' },
+        { id: 'ponte-azul', name: 'Ponte Azul', shortName: 'PAZ', strength: 60, prestige: 51, rivalId: 'campinas', country: 'Brasil', flag: '🇧🇷', league: 'Liga Nacional B' },
+        { id: 'litoral', name: 'Litoral FC', shortName: 'LIT', strength: 62, prestige: 55, rivalId: 'santos-do-sul', country: 'Brasil', flag: '🇧🇷', league: 'Liga Nacional B' },
+        { id: 'santos-do-sul', name: 'Santos do Sul', shortName: 'SDS', strength: 64, prestige: 58, rivalId: 'litoral', country: 'Brasil', flag: '🇧🇷', league: 'Liga Nacional B' },
+        { id: 'aurora', name: 'Aurora Paulista', shortName: 'AUR', strength: 69, prestige: 67, rivalId: 'capital', country: 'Brasil', flag: '🇧🇷', league: 'Liga Nacional' },
+        { id: 'capital', name: 'Capital Esporte Clube', shortName: 'CAP', strength: 73, prestige: 75, rivalId: 'aurora', country: 'Brasil', flag: '🇧🇷', league: 'Liga Nacional' },
+        { id: 'academia', name: 'Academia Verde', shortName: 'ACV', strength: 80, prestige: 84, rivalId: 'imperial', country: 'Brasil', flag: '🇧🇷', league: 'Liga Nacional' },
+        { id: 'imperial', name: 'Imperial Paulista', shortName: 'IMP', strength: 82, prestige: 88, rivalId: 'academia', country: 'Brasil', flag: '🇧🇷', league: 'Liga Nacional' },
+        { id: 'lisboa', name: 'Lisboa Navegantes', shortName: 'LNV', strength: 84, prestige: 86, rivalId: 'porto-real', country: 'Portugal', flag: '🇵🇹', league: 'Liga Portuguesa' },
+        { id: 'porto-real', name: 'Porto Real', shortName: 'PRT', strength: 83, prestige: 85, rivalId: 'lisboa', country: 'Portugal', flag: '🇵🇹', league: 'Liga Portuguesa' },
+        { id: 'madrid', name: 'Madrid Blanco', shortName: 'MDB', strength: 91, prestige: 97, rivalId: 'barcelona', country: 'Espanha', flag: '🇪🇸', league: 'Liga Espanhola' },
+        { id: 'barcelona', name: 'Barcelona Blau', shortName: 'BLB', strength: 90, prestige: 97, rivalId: 'madrid', country: 'Espanha', flag: '🇪🇸', league: 'Liga Espanhola' }
     ];
     Game.STARTING_CLUB_IDS = ['campinas', 'ponte-azul', 'litoral', 'santos-do-sul'];
     Game.POSITION_GOAL_RATE = {
@@ -212,12 +212,15 @@ var Game;
             attributes: rAttrs, overall: calculateOverall(rivalPosition, rAttrs),
             potential: Game.clamp(potential + Game.randInt(temp, -4, 4), 78, 96),
             potentialHint: 'Oculto', primarySpecialty: rPrimary, secondarySpecialty: rSecondary,
-            form: Game.randInt(temp, 47, 55), reputation: Game.randInt(temp, 8, 14), clubId: Game.pick(temp, startClubs), history: []
+            form: Game.randInt(temp, 47, 55), reputation: Game.randInt(temp, 8, 14), clubId: Game.pick(temp, startClubs), history: [],
+            lastRating: 6.9, coachTrust: 50
         };
         return {
             id: `career-${seed}`, name: name.trim() || 'Jogador', age: 16, position, attributes,
             overall: ovr, potential, potentialHint: hint, primarySpecialty: primary, secondarySpecialty: secondary,
-            form: 50, reputation: 10, clubId, seed, rngState: temp.rngState, seasonIndex: 0, history: [], rival
+            form: 50, reputation: 10, clubId, seed, rngState: temp.rngState, seasonIndex: 0, history: [], rival,
+            introStage: 'trial', trialResult: undefined, trialOffers: [], lastRating: 6.9, coachTrust: 50,
+            rivalryRecord: { player: 0, rival: 0, draws: 0 }, version: '0.2'
         };
     }
     Game.createCareer = createCareer;
@@ -226,6 +229,59 @@ var Game;
         const last = ['Rodríguez', 'Ferreira', 'Silva', 'Mendes', 'Almeida', 'Costa', 'Santos', 'Pereira', 'García', 'Romero', 'Oliveira', 'Torres'];
         return `${Game.pick(c, first)} ${Game.pick(c, last)}`;
     }
+    function trialChoices(career) {
+        if (career.position === 'GOL') {
+            return [
+                { id: 'goalkeeping', label: 'Mostrar reflexo e segurança', attribute: 'goalkeeping', text: 'Assumir o protagonismo nas defesas e bolas difíceis.' },
+                { id: 'passing', label: 'Impressionar com os pés', attribute: 'passing', text: 'Participar da construção e acelerar a saída de bola.' }
+            ];
+        }
+        const preferred = {
+            ATA: ['shooting', 'dribbling', 'passing'], PE: ['dribbling', 'shooting', 'passing'], PD: ['dribbling', 'shooting', 'passing'],
+            MEI: ['passing', 'dribbling', 'shooting'], MC: ['passing', 'dribbling', 'tackling'], VOL: ['tackling', 'passing', 'dribbling'],
+            LE: ['tackling', 'passing', 'dribbling'], LD: ['tackling', 'passing', 'dribbling'], ZAG: ['tackling', 'passing', 'shooting']
+        }[career.position];
+        const labels = {
+            shooting: ['Buscar o gol', 'Arriscar mais finalizações e aparecer perto da área.'],
+            passing: ['Comandar o jogo com passes', 'Valorizar a bola e procurar passes que quebrem linhas.'],
+            dribbling: ['Partir para cima', 'Tentar desequilibrar no um contra um e chamar atenção pela técnica.'],
+            tackling: ['Ser dominante sem a bola', 'Antecipar jogadas, recuperar bolas e mostrar segurança defensiva.']
+        };
+        return preferred.map(a => ({ id: a, label: labels[a][0], attribute: a, text: labels[a][1] }));
+    }
+    Game.trialChoices = trialChoices;
+    function resolveTrial(career, attribute) {
+        if (career.introStage !== 'trial') return;
+        const value = getAttr(career.attributes, attribute);
+        const chance = Game.clamp(.34 + value * .0072, .55, .90);
+        const success = Game.nextRandom(career) < chance;
+        if (success) {
+            career.form = Game.clamp(career.form + 3, 0, 100);
+            career.reputation = Game.clamp(career.reputation + 2, 0, 100);
+            career.trialResult = `Você chama atenção dos observadores com uma atuação segura. ${Game.ATTRIBUTE_LABELS[attribute]} foi o destaque da sua peneira.`;
+        } else {
+            career.form = Game.clamp(career.form - 1, 0, 100);
+            career.reputation = Game.clamp(career.reputation + 1, 0, 100);
+            career.trialResult = `Nem tudo encaixa, mas os observadores enxergam margem para evolução. Sua carreira continua aberta.`;
+        }
+        const clubs = Game.STARTING_CLUB_IDS.map(Game.clubById).sort((a,b)=>a.strength-b.strength);
+        let pool = success ? clubs.slice(1) : clubs.slice(0,3);
+        if (pool.length < 3) pool = clubs;
+        career.trialOffers = pool.slice().sort(() => Game.nextRandom(career) - .5).slice(0,3).map(c => ({ clubId: c.id, projectedRole: determineRole(career.overall, c, 6.9, 50) }));
+        career.introStage = 'offers';
+    }
+    Game.resolveTrial = resolveTrial;
+    function chooseStartingClub(career, clubId) {
+        if (!career.trialOffers?.some(o => o.clubId === clubId)) return;
+        career.clubId = clubId;
+        if (career.rival.clubId === clubId) {
+            career.rival.clubId = Game.pick(career, Game.STARTING_CLUB_IDS.filter(id => id !== clubId));
+        }
+        career.introStage = 'complete';
+        career.careerLog = career.careerLog || [];
+        career.careerLog.push({ type: 'start', year: 2026, text: `Primeiro contrato profissional com ${Game.clubById(clubId).name}.` });
+    }
+    Game.chooseStartingClub = chooseStartingClub;
     function startSeason(career) {
         if (career.pendingSeason)
             return;
@@ -233,10 +289,11 @@ var Game;
         const year = 2026 + career.seasonIndex;
         const eventCount = club.prestige >= 85 ? 5 : club.prestige >= 70 ? 4 : 3;
         const events = buildSeasonEvents(career, eventCount);
+        const roleAtStart = determineRole(career.overall, club, career.lastRating ?? 6.9, career.coachTrust ?? 50);
         career.pendingSeason = {
             yearLabel: `${year}/${String((year + 1) % 100).padStart(2, '0')}`,
             clubIdAtStart: career.clubId, overallStart: career.overall, reputationStart: career.reputation,
-            events, currentEvent: 0,
+            events, currentEvent: 0, roleAtStart, objective: seasonObjective(roleAtStart),
             effects: { goals: 0, assists: 0, tackles: 0, ratingBonus: 0, reputationDelta: 0, formDelta: 0 },
             trainingGains: {}
         };
@@ -384,7 +441,7 @@ var Game;
             else {
                 p.effects.ratingBonus -= event.kind === 'derby' ? .025 : .015;
                 p.effects.formDelta -= 1;
-                text = `A jogada não funciona. Chance estimada de sucesso: ${Math.round(chance * 100)}%.`;
+                text = event.kind === 'derby' ? 'A tentativa não funciona e o rival consegue escapar do lance. O clássico segue aberto.' : 'A tentativa não funciona desta vez. Você precisa se recompor para o restante da partida.';
             }
         }
         event.resolved = true;
@@ -405,19 +462,28 @@ var Game;
     function getAttr(a, attr) {
         return attr === 'goalkeeping' ? (a.goalkeeping ?? 1) : a[attr];
     }
-    function determineRole(overall, club) {
+    function determineRole(overall, club, recentRating = 6.9, coachTrust = 50) {
         const reference = club.strength - 4;
-        const d = overall - reference;
-        if (d >= 10)
-            return 'Estrela';
-        if (d >= 5)
-            return 'Importante';
-        if (d >= 0)
-            return 'Titular';
-        if (d >= -5)
-            return 'Rotação';
+        const performanceAdjustment = Game.clamp((recentRating - 6.9) * 4.5, -3.0, 4.0);
+        const trustAdjustment = Game.clamp((coachTrust - 50) * .055, -2.0, 2.0);
+        const d = overall + performanceAdjustment + trustAdjustment - reference;
+        if (d >= 10) return 'Estrela';
+        if (d >= 5) return 'Importante';
+        if (d >= 0) return 'Titular';
+        if (d >= -5) return 'Rotação';
         return 'Reserva';
     }
+    Game.determineRole = determineRole;
+    function seasonObjective(role) {
+        return {
+            'Estrela': 'Liderar o time e disputar prêmios individuais.',
+            'Importante': 'Ser decisivo e consolidar seu protagonismo.',
+            'Titular': 'Manter regularidade e terminar a temporada entre os destaques.',
+            'Rotação': 'Ganhar minutos e brigar por uma vaga entre os titulares.',
+            'Reserva': 'Aproveitar as oportunidades e conquistar espaço no elenco.'
+        }[role] || 'Fazer uma boa temporada.';
+    }
+    Game.seasonObjective = seasonObjective;
     function minutesForRole(c, role) {
         const ranges = {
             'Estrela': [43, 49, .90], 'Importante': [40, 47, .82], 'Titular': [35, 44, .75], 'Rotação': [25, 38, .48], 'Reserva': [12, 26, .25]
@@ -429,7 +495,7 @@ var Game;
         return { games, starts, minutes };
     }
     function simulateFieldStats(c, player, club, effects) {
-        const role = determineRole(player.overall, club);
+        const role = determineRole(player.overall, club, player.lastRating ?? 6.9, player.coachTrust ?? 50);
         const gm = minutesForRole(c, role);
         const per90 = gm.minutes / 90;
         const offense = Game.clamp(.82 + (club.strength - 58) * .0105, .78, 1.25);
@@ -453,7 +519,7 @@ var Game;
         return { role, ...gm, goals, assists, tackles, cleanSheets, yellowCards, redCards, rating };
     }
     function simulateGoalkeeperStats(c, player, club, effects) {
-        const role = determineRole(player.overall, club);
+        const role = determineRole(player.overall, club, player.lastRating ?? 6.9, player.coachTrust ?? 50);
         const gm = minutesForRole(c, role);
         const per90 = gm.minutes / 90;
         const shotsPer90 = Game.clamp(4.7 - (club.strength - 58) * .035, 3.1, 4.8);
@@ -579,7 +645,7 @@ var Game;
         if (!candidates.length)
             return undefined;
         const club = Game.pick(career, candidates.slice(0, Math.min(4, candidates.length)));
-        return { clubId: club.id, clubName: club.name, strength: club.strength, prestige: club.prestige, reason: `Nota ${stats.rating.toFixed(2)} e OVR ${career.overall} chamaram atenção do mercado.` };
+        return { clubId: club.id, clubName: club.name, strength: club.strength, prestige: club.prestige, reason: `Sua temporada chamou atenção no mercado. O clube acredita que você pode dar o próximo passo na carreira.` };
     }
     function simulateNpcSeason(career, rival, yearLabel) {
         const club = Game.clubById(rival.clubId);
@@ -592,6 +658,8 @@ var Game;
         const awards = awardsFor(career, rival, raw, club, titles);
         rival.reputation = reputationAfter(rival.reputation, raw.rating, titles, awards);
         rival.form = Game.clamp(Math.round(rival.form + (raw.rating - 6.9) * 4 + Game.rand(career, -2, 2)), 35, 75);
+        rival.coachTrust = Game.clamp(Math.round((rival.coachTrust ?? 50) + (raw.rating - 6.9) * 8 + Game.rand(career, -2, 2)), 20, 85);
+        rival.lastRating = raw.rating;
         applyDevelopment(career, rival, raw.rating, raw.minutes);
         rival.age += 1;
         if (raw.rating >= 7.25 && Game.nextRandom(career) < .35) {
@@ -603,6 +671,46 @@ var Game;
         rival.history.push(result);
         return result;
     }
+    function coachTrustAfter(career, rating, titles) {
+        return Game.clamp(Math.round((career.coachTrust ?? 50) + (rating - 6.9) * 10 + titles.length * 1.5 + Game.rand(career, -2, 2)), 15, 90);
+    }
+    function seasonVerdict(stats) {
+        if (stats.rating >= 7.75) return { tone: 'elite', title: 'Temporada extraordinária', text: 'Você foi um dos grandes nomes da temporada e elevou seu patamar na carreira.' };
+        if (stats.rating >= 7.35) return { tone: 'great', title: 'Excelente temporada', text: 'Regularidade e impacto colocaram seu nome entre os destaques do campeonato.' };
+        if (stats.rating >= 7.00) return { tone: 'good', title: 'Boa temporada', text: 'Você cumpriu bem seu papel e saiu do ano valorizado.' };
+        if (stats.rating >= 6.65) return { tone: 'neutral', title: 'Temporada regular', text: 'Houve bons momentos, mas ainda existe espaço claro para crescer.' };
+        return { tone: 'bad', title: 'Temporada abaixo do esperado', text: 'Seu espaço no elenco fica sob pressão para a próxima temporada.' };
+    }
+    function clubDecision(career, stats, club) {
+        const trust = career.coachTrust ?? 50;
+        if (career.age >= 19 && stats.rating < 6.35 && ['Reserva','Rotação'].includes(stats.role) && trust < 34) {
+            const options = Game.CLUBS.filter(c => c.id !== club.id && c.strength <= club.strength + 1 && c.strength >= Math.max(56, career.overall - 5))
+                .sort((a,b)=>Math.abs(a.strength-career.overall)-Math.abs(b.strength-career.overall)).slice(0,3);
+            if (options.length) return { type: 'release', title: 'Fim de ciclo', text: `${club.name} decidiu abrir espaço no elenco. Você precisará escolher um novo destino.`, options: options.map(c=>c.id) };
+        }
+        if (stats.rating < 6.55 && trust < 42) return { type: 'warning', title: 'Pressão por resultados', text: 'A comissão técnica quer uma resposta na próxima temporada. Seu espaço já não é garantido.' };
+        if (stats.rating >= 7.45) return { type: 'praise', title: 'Moral em alta', text: 'A comissão técnica considera você peça importante para os planos da próxima temporada.' };
+        return { type: 'stable', title: 'Situação estável', text: 'Você segue nos planos do clube, mas a disputa por espaço continua.' };
+    }
+    function rivalryResult(career, playerStats, rivalStats) {
+        const pScore = playerStats.rating + playerStats.titles.length * .08 + playerStats.awards.length * .10;
+        const rScore = rivalStats.rating + rivalStats.titles.length * .08 + rivalStats.awards.length * .10;
+        career.rivalryRecord = career.rivalryRecord || { player: 0, rival: 0, draws: 0 };
+        if (Math.abs(pScore-rScore) < .05) { career.rivalryRecord.draws++; return 'draw'; }
+        if (pScore > rScore) { career.rivalryRecord.player++; return 'player'; }
+        career.rivalryRecord.rival++; return 'rival';
+    }
+    function chooseReleaseDestination(career, clubId) {
+        const d = career.lastSummary?.clubDecision;
+        if (!d || d.type !== 'release' || !d.options.includes(clubId)) return;
+        career.clubId = clubId;
+        career.coachTrust = 50;
+        career.lastSummary = undefined;
+        career.pendingOffer = undefined;
+        career.careerLog = career.careerLog || [];
+        career.careerLog.push({ type: 'transfer', year: 2026 + career.seasonIndex, text: `Novo começo no ${Game.clubById(clubId).name}.` });
+    }
+    Game.chooseReleaseDestination = chooseReleaseDestination;
     function finalizeSeason(career) {
         const p = career.pendingSeason;
         if (!p)
@@ -616,15 +724,21 @@ var Game;
         const awards = awardsFor(career, career, raw, club, titles);
         career.reputation = reputationAfter(career.reputation, raw.rating, titles, awards, p.effects);
         career.form = Game.clamp(Math.round(career.form + (raw.rating - 6.9) * 5 + p.effects.formDelta + Game.rand(career, -2, 2)), 35, 75);
+        career.coachTrust = coachTrustAfter(career, raw.rating, titles);
+        career.lastRating = raw.rating;
         const developmentText = applyDevelopment(career, career, raw.rating, raw.minutes);
-        const stats = { ...raw, yearLabel: p.yearLabel, age: career.age, clubId: club.id, clubName: club.name, overallStart: p.overallStart, overallEnd: career.overall, reputationStart: p.reputationStart, reputationEnd: career.reputation, leaguePosition: lp, titles, awards };
+        const nextRole = determineRole(career.overall, club, raw.rating, career.coachTrust);
+        const stats = { ...raw, yearLabel: p.yearLabel, age: career.age, clubId: club.id, clubName: club.name, overallStart: p.overallStart, overallEnd: career.overall, reputationStart: p.reputationStart, reputationEnd: career.reputation, leaguePosition: lp, titles, awards, roleAtStart: p.roleAtStart, nextRole };
         career.history.push(stats);
         const rivalStats = simulateNpcSeason(career, career.rival, p.yearLabel);
+        const rivalryWinner = rivalryResult(career, stats, rivalStats);
+        const verdict = seasonVerdict(stats);
+        const decision = clubDecision(career, stats, club);
         career.age += 1;
         career.seasonIndex += 1;
-        const offer = possibleOffer(career, stats);
+        const offer = decision.type === 'release' ? undefined : possibleOffer(career, stats);
         career.pendingOffer = offer;
-        const summary = { player: stats, rival: rivalStats, transferOffer: offer, developmentText };
+        const summary = { player: stats, rival: rivalStats, transferOffer: offer, developmentText, verdict, clubDecision: decision, rivalryWinner };
         career.lastSummary = summary;
         career.pendingSeason = undefined;
         return summary;
@@ -632,6 +746,9 @@ var Game;
     Game.finalizeSeason = finalizeSeason;
     function acceptOffer(career) { if (career.pendingOffer) {
         career.clubId = career.pendingOffer.clubId;
+        career.careerLog = career.careerLog || [];
+        career.careerLog.push({ type: 'transfer', year: 2026 + career.seasonIndex, text: `Transferência para ${Game.clubById(career.clubId).name}.` });
+        career.coachTrust = 50;
         career.reputation = Game.clamp(career.reputation + 2, 0, 100);
         career.pendingOffer = undefined;
     } }
@@ -689,124 +806,122 @@ var Game;
     let career;
     const $ = (sel) => document.querySelector(sel);
     const app = () => $('#app');
-    function escapeHtml(s) { return s.replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c] || c)); }
+    function escapeHtml(s) { return String(s ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c] || c)); }
     function attrValue(a, k) { return k === 'goalkeeping' ? (a.goalkeeping ?? 0) : a[k]; }
+    function migrateCareer(c) {
+        if (!c) return c;
+        c.version = '0.2';
+        c.introStage = c.introStage || 'complete';
+        c.lastRating = c.lastRating ?? c.history?.[c.history.length - 1]?.rating ?? 6.9;
+        c.coachTrust = c.coachTrust ?? 50;
+        c.rivalryRecord = c.rivalryRecord || { player: 0, rival: 0, draws: 0 };
+        c.careerLog = c.careerLog || [];
+        if (c.lastSummary && !c.lastSummary.verdict) c.lastSummary = undefined;
+        if (c.pendingSeason) {
+            const club = Game.clubById(c.pendingSeason.clubIdAtStart || c.clubId);
+            c.pendingSeason.roleAtStart = c.pendingSeason.roleAtStart || Game.determineRole(c.overall, club, c.lastRating, c.coachTrust);
+            c.pendingSeason.objective = c.pendingSeason.objective || Game.seasonObjective(c.pendingSeason.roleAtStart);
+        }
+        if (c.rival) {
+            c.rival.lastRating = c.rival.lastRating ?? c.rival.history?.[c.rival.history.length - 1]?.rating ?? 6.9;
+            c.rival.coachTrust = c.rival.coachTrust ?? 50;
+        }
+        return c;
+    }
     function initUI() {
-        career = Game.loadCareer();
+        career = migrateCareer(Game.loadCareer());
+        if (career) Game.saveCareer(career);
         render();
     }
     Game.initUI = initUI;
     function render() {
-        if (!career) {
-            renderCreate();
-            return;
-        }
-        if (career.pendingSeason) {
-            renderSeason();
-            return;
-        }
-        if (career.lastSummary) {
-            renderSummary();
-            return;
-        }
+        if (!career) return renderCreate();
+        if (career.introStage && career.introStage !== 'complete') return renderIntro();
+        if (career.pendingSeason) return renderSeason();
+        if (career.lastSummary) return renderSummary();
         renderDashboard();
     }
     function positionOptions() { return Object.keys(Game.POSITION_LABELS).map(p => `<option value="${p}">${p} — ${Game.POSITION_LABELS[p]}</option>`).join(''); }
     function specialtyOptions(pos) { const attrs = pos === 'GOL' ? ['goalkeeping', 'passing'] : ['shooting', 'passing', 'dribbling', 'tackling']; return attrs.map(a => `<option value="${a}">${Game.ATTRIBUTE_LABELS[a]}</option>`).join(''); }
-    function clubOptions() { return Game.STARTING_CLUB_IDS.map(id => { const c = Game.clubById(id); return `<option value="${id}">${c.name} · força ${c.strength}</option>`; }).join(''); }
     function renderCreate() {
-        app().innerHTML = `<div class="shell narrow"><section class="hero"><span class="eyebrow">PROTÓTIPO V0.1</span><h1>BitLife de Futebol</h1><p>Crie um atleta e teste o primeiro motor de carreira. Os clubes são fictícios nesta versão.</p></section>
-    <section class="card form-card"><label>Nome do jogador<input id="name" maxlength="24" value="Vinicius Linhares"></label>
-    <label>Posição<select id="position">${positionOptions()}</select></label>
-    <div class="grid2"><label>Especialidade principal<select id="primary"></select></label><label>Especialidade secundária<select id="secondary"></select></label></div>
-    <label>Clube inicial<select id="club">${clubOptions()}</select></label>
-    <button id="create" class="primary">Iniciar carreira</button></section>
-    <p class="footnote">A carreira é salva automaticamente neste navegador.</p></div>`;
+        app().innerHTML = `<div class="shell narrow"><div class="brand">⚽ <strong>FutLife</strong><span>V0.2</span></div><section class="hero"><span class="eyebrow">SUA HISTÓRIA COMEÇA AQUI</span><h1>Crie seu jogador</h1><p>Escolha sua posição e as características que vão moldar sua evolução ao longo da carreira.</p></section>
+        <section class="card form-card"><label>Nome do jogador<input id="name" maxlength="24" value="Vinicius Linhares"></label>
+        <label>Posição<select id="position">${positionOptions()}</select></label>
+        <div class="grid2"><label>Principal qualidade<select id="primary"></select></label><label>Segunda qualidade<select id="secondary"></select></label></div>
+        <button id="create" class="primary wide">Ir para a peneira</button></section><p class="footnote">Sua carreira fica salva automaticamente neste navegador.</p></div>`;
         const pos = $('#position');
-        const sync = () => { const p = pos.value; $('#primary').innerHTML = specialtyOptions(p); $('#secondary').innerHTML = specialtyOptions(p); const s = $('#secondary'); if (s.options.length > 1)
-            s.selectedIndex = 1; };
-        sync();
-        pos.onchange = sync;
-        $('#create').onclick = () => { const p = pos.value; let primary = $('#primary').value; let secondary = $('#secondary').value; if (primary === secondary) {
-            const opts = p === 'GOL' ? ['goalkeeping', 'passing'] : ['shooting', 'passing', 'dribbling', 'tackling'];
-            secondary = opts.find(x => x !== primary);
-        } career = Game.createCareer($('#name').value, p, primary, secondary, $('#club').value); Game.saveCareer(career); render(); };
+        const sync = () => { const p = pos.value; $('#primary').innerHTML = specialtyOptions(p); $('#secondary').innerHTML = specialtyOptions(p); const sec = $('#secondary'); if (sec.options.length > 1) sec.selectedIndex = 1; };
+        sync(); pos.onchange = sync;
+        $('#create').onclick = () => { const p = pos.value; let primary = $('#primary').value; let secondary = $('#secondary').value; if (primary === secondary) { const opts = p === 'GOL' ? ['goalkeeping','passing'] : ['shooting','passing','dribbling','tackling']; secondary = opts.find(x => x !== primary); }
+            career = Game.createCareer($('#name').value, p, primary, secondary, Game.STARTING_CLUB_IDS[0]); Game.saveCareer(career); render(); };
     }
-    function playerHeader() {
-        if (!career)
-            return '';
-        const club = Game.clubById(career.clubId);
-        return `<header class="player-head"><div><span class="eyebrow">${Game.POSITION_LABELS[career.position]} · ${career.age} anos</span><h1>${escapeHtml(career.name)}</h1><p>${club.name}</p></div><div class="ovr"><span>OVR</span><strong>${career.overall}</strong></div></header>`;
-    }
-    function attributeCards(p) { const attrs = availableDisplayAttrs(p.position); return `<div class="attributes">${attrs.map(a => `<div class="attr"><span>${Game.ATTRIBUTE_LABELS[a]}</span><strong>${attrValue(p.attributes, a)}</strong>${a === p.primarySpecialty ? '<small>principal</small>' : a === p.secondarySpecialty ? '<small>secundária</small>' : ''}</div>`).join('')}</div>`; }
-    function availableDisplayAttrs(pos) { return pos === 'GOL' ? ['goalkeeping', 'passing'] : ['shooting', 'passing', 'dribbling', 'tackling']; }
-    function renderDashboard() {
-        if (!career)
-            return;
-        const rival = career.rival;
-        const club = Game.clubById(career.clubId);
-        const rclub = Game.clubById(rival.clubId);
-        app().innerHTML = `<div class="shell">${playerHeader()}${attributeCards(career)}
-    <div class="grid3 stats-strip"><div><span>Potencial</span><strong>${career.potentialHint}</strong></div><div><span>Forma</span><strong>${career.form}</strong></div><div><span>Reputação</span><strong>${career.reputation}</strong></div></div>
-    <section class="card"><div class="section-title"><div><span class="eyebrow">PRÓXIMA TEMPORADA</span><h2>${2026 + career.seasonIndex}/${String((2027 + career.seasonIndex) % 100).padStart(2, '0')}</h2></div><span class="pill">${club.shortName} · força ${club.strength}</span></div><p>Serão ${club.prestige >= 85 ? 5 : club.prestige >= 70 ? 4 : 3} eventos relevantes antes do fechamento da temporada.</p><button id="start" class="primary">Começar temporada</button></section>
-    <section class="card rival"><span class="eyebrow">SEU RIVAL</span><div class="rival-row"><div><h2>${escapeHtml(rival.name)}</h2><p>${Game.POSITION_LABELS[rival.position]} · ${rclub.name}</p></div><div class="mini-ovr">${rival.overall}</div></div>${attributeCards(rival)}</section>
-    ${career.history.length ? historyHtml(career.history) : ''}
-    <section class="card diagnostics"><details><summary>Diagnóstico do motor</summary><p>Executa 250 temporadas independentes com um atleta-base da sua posição. Serve para detectar números fora da curva.</p><button id="diag">Rodar diagnóstico</button><pre id="diagOut"></pre></details></section>
-    <button id="reset" class="ghost danger">Apagar carreira e recomeçar</button></div>`;
-        $('#start').onclick = () => { Game.startSeason(career); Game.saveCareer(career); render(); };
-        $('#reset').onclick = () => { if (confirm('Apagar esta carreira?')) {
-            Game.clearCareer();
-            career = undefined;
-            render();
-        } };
-        $('#diag').onclick = () => { const d = Game.runDiagnostics(career.position, 250); $('#diagOut').textContent = JSON.stringify(d, null, 2); };
-    }
-    function renderSeason() {
-        if (!career?.pendingSeason)
-            return;
-        const p = career.pendingSeason;
-        const event = p.events[p.currentEvent];
-        if (!event) {
-            app().innerHTML = `<div class="shell narrow">${playerHeader()}<section class="card event-card"><span class="eyebrow">EVENTOS CONCLUÍDOS</span><h2>Hora de fechar a temporada</h2><p>O motor agora calculará jogos, minutos, estatísticas, nota, evolução, rival e possíveis premiações.</p><button id="finish" class="primary">Encerrar temporada</button></section></div>`;
-            $('#finish').onclick = () => { Game.finalizeSeason(career); Game.saveCareer(career); render(); };
+    function renderIntro() {
+        if (career.introStage === 'trial') {
+            const choices = Game.trialChoices(career);
+            app().innerHTML = `<div class="shell narrow"><div class="brand">⚽ <strong>FutLife</strong><span>V0.2</span></div>${playerHeader(true)}<section class="story-card"><span class="story-kicker">16 ANOS · PRIMEIRA PENEIRA</span><h2>Uma chance para começar</h2><p>Observadores de vários clubes estão à beira do campo. Você sabe que alguns lances podem definir onde sua carreira profissional vai começar.</p><p class="muted">Como você quer chamar atenção?</p><div class="choices">${choices.map(c=>`<button class="choice trial-choice" data-attr="${c.attribute}"><strong>${c.label}</strong><span>${Game.ATTRIBUTE_LABELS[c.attribute]} ${attrValue(career.attributes,c.attribute)}</span><small>${c.text}</small></button>`).join('')}</div></section></div>`;
+            document.querySelectorAll('.trial-choice').forEach(b => b.onclick = () => { Game.resolveTrial(career, b.dataset.attr); Game.saveCareer(career); render(); });
             return;
         }
-        const n = p.currentEvent + 1;
-        app().innerHTML = `<div class="shell narrow">${playerHeader()}<div class="progress"><span style="width:${(n / p.events.length) * 100}%"></span></div><p class="progress-label">Evento ${n} de ${p.events.length}</p>
-    <section class="card event-card"><span class="eyebrow">${event.kind === 'derby' ? 'CLÁSSICO' : event.kind === 'training' ? 'TREINAMENTO' : event.kind === 'career' ? 'CARREIRA' : 'PARTIDA'}</span><h2>${event.title}</h2><p class="event-text">${event.text}</p>
-    ${event.resolved ? `<div class="result"><strong>Resultado</strong><p>${event.resultText}</p></div><button id="continue" class="primary">Continuar</button>` : `<div class="choices">${event.choices.map(c => `<button class="choice" data-id="${c.id}"><strong>${c.label}</strong>${c.attribute ? `<span>${Game.ATTRIBUTE_LABELS[c.attribute]} ${attrValue(career.attributes, c.attribute)}</span>` : ''}${c.description ? `<small>${c.description}</small>` : ''}</button>`).join('')}</div>`}</section></div>`;
-        document.querySelectorAll('.choice').forEach(b => b.onclick = () => { Game.resolveEventChoice(career, b.dataset.id); Game.saveCareer(career); render(); });
-        const cont = document.querySelector('#continue');
-        if (cont)
-            cont.onclick = () => { Game.advanceEvent(career); Game.saveCareer(career); render(); };
+        const offers = career.trialOffers || [];
+        app().innerHTML = `<div class="shell narrow"><div class="brand">⚽ <strong>FutLife</strong><span>V0.2</span></div><section class="hero compact"><span class="eyebrow">RESULTADO DA PENEIRA</span><h1>Chegaram propostas</h1><p>${escapeHtml(career.trialResult || 'Sua atuação despertou interesse.')}</p></section>
+        <section class="card"><span class="eyebrow">ESCOLHA SEU PRIMEIRO CLUBE</span><div class="club-offers">${offers.map(o=>{const c=Game.clubById(o.clubId); return `<button class="club-offer" data-club="${c.id}"><div><strong>${c.flag} ${c.name}</strong><span>${c.league}</span></div><div class="offer-meta"><small>Força ${c.strength}</small><b>${o.projectedRole}</b></div></button>`}).join('')}</div></section></div>`;
+        document.querySelectorAll('.club-offer').forEach(b => b.onclick = () => { Game.chooseStartingClub(career, b.dataset.club); Game.saveCareer(career); render(); });
     }
-    function metric(label, value) { return `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`; }
+    function playerHeader(minimal=false) {
+        if (!career) return '';
+        const club = Game.clubById(career.clubId);
+        const sec = career.secondaryPosition ? ` · também ${career.secondaryPosition}` : '';
+        return `<header class="player-head ${minimal?'minimal':''}"><div><span class="eyebrow">${Game.POSITION_LABELS[career.position]}${sec} · ${career.age} anos</span><h1>${escapeHtml(career.name)}</h1>${minimal?'':`<p>${club.flag} ${club.name} · ${club.league}</p>`}</div><div class="ovr"><span>OVR</span><strong>${career.overall}</strong></div></header>`;
+    }
+    function availableDisplayAttrs(pos) { return pos === 'GOL' ? ['goalkeeping','passing'] : ['shooting','passing','dribbling','tackling']; }
+    function attributeCards(p) { return `<div class="attributes">${availableDisplayAttrs(p.position).map(a=>`<div class="attr"><span>${Game.ATTRIBUTE_LABELS[a]}</span><strong>${attrValue(p.attributes,a)}</strong>${a===p.primarySpecialty?'<small>principal</small>':a===p.secondarySpecialty?'<small>secundária</small>':''}</div>`).join('')}</div>`; }
+    function currentRole() { return Game.determineRole(career.overall, Game.clubById(career.clubId), career.lastRating ?? 6.9, career.coachTrust ?? 50); }
+    function careerTotals(history) {
+        return history.reduce((a,s)=>{a.games+=s.games||0;a.goals+=s.goals||0;a.assists+=s.assists||0;a.tackles+=s.tackles||0;a.titles+=(s.titles||[]).length;a.awards+=(s.awards||[]).length;return a;},{games:0,goals:0,assists:0,tackles:0,titles:0,awards:0});
+    }
+    function formLabel(v) { return v>=65?'Excelente':v>=56?'Boa':v>=45?'Regular':'Baixa'; }
+    function reputationLabel(v) { return v>=90?'Ícone mundial':v>=75?'Estrela':v>=55?'Muito conhecido':v>=35?'Em ascensão':v>=18?'Promessa':'Início de carreira'; }
+    function renderDashboard() {
+        const club=Game.clubById(career.clubId), rival=career.rival, rclub=Game.clubById(rival.clubId), role=currentRole(), totals=careerTotals(career.history), rec=career.rivalryRecord||{player:0,rival:0,draws:0};
+        const season=`${2026+career.seasonIndex}/${String((2027+career.seasonIndex)%100).padStart(2,'0')}`;
+        app().innerHTML=`<div class="shell"><div class="brand">⚽ <strong>FutLife</strong><span>V0.2</span></div>${playerHeader()}${attributeCards(career)}
+        <div class="status-grid"><div><span>Potencial</span><strong>${career.potentialHint}</strong></div><div><span>Status</span><strong>${role}</strong></div><div><span>Forma</span><strong>${formLabel(career.form)}</strong><small>${career.form}/100</small></div><div><span>Reputação</span><strong>${reputationLabel(career.reputation)}</strong><small>${career.reputation}/100</small></div></div>
+        <section class="card next-season"><div class="section-title"><div><span class="eyebrow">TEMPORADA ${season}</span><h2>${club.flag} ${club.name}</h2><p>${club.league} · força do elenco ${club.strength}</p></div><span class="role-badge">${role}</span></div><div class="objective"><span>Meta da temporada</span><strong>${Game.seasonObjective(role)}</strong></div><button id="start" class="primary wide">Começar temporada</button></section>
+        <section class="card"><span class="eyebrow">SUA CARREIRA</span><div class="career-numbers">${metric('Temporadas',career.history.length)}${metric('Jogos',totals.games)}${metric('Gols',totals.goals)}${metric('Assistências',totals.assists)}${metric('Títulos',totals.titles)}${metric('Prêmios',totals.awards)}</div></section>
+        <section class="card rival"><div class="section-title"><div><span class="eyebrow">RIVALIDADE</span><h2>${escapeHtml(rival.name)}</h2><p>${rclub.flag} ${rclub.name} · OVR ${rival.overall}</p></div><div class="rival-score"><b>${rec.player}</b><span>×</span><b>${rec.rival}</b></div></div><p class="muted">${rec.draws?`${rec.draws} temporada(s) empatada(s) na comparação.`:'A disputa é decidida temporada a temporada pelo desempenho, títulos e prêmios.'}</p></section>
+        ${career.history.length?historyHtml(career.history):''}<button id="reset" class="ghost danger">Apagar carreira e recomeçar</button></div>`;
+        $('#start').onclick=()=>{Game.startSeason(career);Game.saveCareer(career);render();};
+        $('#reset').onclick=()=>{if(confirm('Apagar esta carreira?')){Game.clearCareer();career=undefined;render();}};
+    }
+    function renderSeason() {
+        const p=career.pendingSeason, event=p.events[p.currentEvent];
+        if(!event){app().innerHTML=`<div class="shell narrow"><div class="brand">⚽ <strong>FutLife</strong><span>V0.2</span></div>${playerHeader()}<section class="story-card end-season"><span class="story-kicker">FIM DE TEMPORADA</span><h2>O ano chegou ao fim</h2><p>Os campeonatos terminaram. Agora é hora de descobrir como foi sua temporada, sua evolução e o que o mercado reserva para o próximo ano.</p><button id="finish" class="primary wide">Ver resumo da temporada</button></section></div>`; $('#finish').onclick=()=>{Game.finalizeSeason(career);Game.saveCareer(career);render();}; return;}
+        const n=p.currentEvent+1;
+        app().innerHTML=`<div class="shell narrow"><div class="brand">⚽ <strong>FutLife</strong><span>V0.2</span></div>${playerHeader()}<div class="season-context"><span>${p.yearLabel}</span><strong>${p.roleAtStart}</strong><small>${escapeHtml(p.objective)}</small></div><div class="progress"><span style="width:${n/p.events.length*100}%"></span></div><p class="progress-label">Momento ${n} de ${p.events.length}</p>
+        <section class="card event-card"><span class="eyebrow">${event.kind==='derby'?'CLÁSSICO':event.kind==='training'?'TREINAMENTO':event.kind==='career'?'CARREIRA':'JOGO IMPORTANTE'}</span><h2>${event.title}</h2><p class="event-text">${event.text}</p>${event.resolved?`<div class="result"><strong>O que aconteceu</strong><p>${event.resultText}</p></div><button id="continue" class="primary wide">Continuar</button>`:`<div class="choices">${event.choices.map(c=>`<button class="choice" data-id="${c.id}"><strong>${c.label}</strong>${c.attribute?`<span>${Game.ATTRIBUTE_LABELS[c.attribute]} ${attrValue(career.attributes,c.attribute)}</span>`:''}${c.description?`<small>${c.description}</small>`:''}</button>`).join('')}</div>`}</section></div>`;
+        document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{Game.resolveEventChoice(career,b.dataset.id);Game.saveCareer(career);render();});
+        if($('#continue')) $('#continue').onclick=()=>{Game.advanceEvent(career);Game.saveCareer(career);render();};
+    }
+    function metric(label,value){return `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`;}
     function renderSummary() {
-        if (!career?.lastSummary)
-            return;
-        const s = career.lastSummary;
-        const p = s.player;
-        const r = s.rival;
-        const goalie = career.position === 'GOL';
-        app().innerHTML = `<div class="shell">${playerHeader()}<section class="hero season-hero"><span class="eyebrow">TEMPORADA ${p.yearLabel}</span><h1>Nota ${p.rating.toFixed(2)}</h1><p>${p.clubName} · ${p.leaguePosition}º no campeonato · ${p.role}</p></section>
-    <div class="metrics">${metric('Jogos', p.games)}${metric('Minutos', p.minutes)}${goalie ? metric('Defesas', p.saves ?? 0) : metric('Gols', p.goals)}${goalie ? metric('% defesas', `${p.savePct}%`) : metric('Assistências', p.assists)}${goalie ? metric('Clean sheets', p.cleanSheets) : metric('Desarmes', p.tackles)}${metric('Clean sheets', p.cleanSheets)}${metric('Amarelos', p.yellowCards)}${metric('Vermelhos', p.redCards)}</div>
-    <section class="card"><div class="section-title"><div><span class="eyebrow">EVOLUÇÃO</span><h2>OVR ${p.overallStart} → ${p.overallEnd}</h2></div><span class="pill">Rep. ${p.reputationStart} → ${p.reputationEnd}</span></div>${attributeCards(career)}<p class="muted">${s.developmentText.join(' · ')}</p></section>
-    <div class="grid2"><section class="card"><span class="eyebrow">TÍTULOS</span>${p.titles.length ? `<ul class="award-list">${p.titles.map(x => `<li>🏆 ${x}</li>`).join('')}</ul>` : '<p class="muted">Nenhum título nesta temporada.</p>'}</section><section class="card"><span class="eyebrow">PRÊMIOS</span>${p.awards.length ? `<ul class="award-list">${p.awards.map(x => `<li>⭐ ${x}</li>`).join('')}</ul>` : '<p class="muted">Nenhum prêmio individual.</p>'}</section></div>
-    <section class="card"><span class="eyebrow">RIVALIDADE · ${p.yearLabel}</span><div class="compare"><div><strong>${escapeHtml(career.name)}</strong><span>OVR ${p.overallEnd}</span><b>${p.rating.toFixed(2)}</b><small>${p.goals} G · ${p.assists} A</small></div><div class="versus">VS</div><div><strong>${escapeHtml(career.rival.name)}</strong><span>OVR ${r.overallEnd}</span><b>${r.rating.toFixed(2)}</b><small>${r.goals} G · ${r.assists} A</small></div></div></section>
-    ${s.transferOffer ? `<section class="card offer"><span class="eyebrow">PROPOSTA</span><h2>${s.transferOffer.clubName}</h2><p>Força ${s.transferOffer.strength} · Prestígio ${s.transferOffer.prestige}</p><p class="muted">${s.transferOffer.reason}</p><div class="actions"><button id="accept" class="primary">Aceitar transferência</button><button id="decline">Ficar no clube</button></div></section>` : ''}
-    <button id="next" class="primary wide" ${s.transferOffer ? 'disabled' : ''}>Seguir para a próxima temporada</button></div>`;
-        const accept = document.querySelector('#accept');
-        if (accept)
-            accept.onclick = () => { Game.acceptOffer(career); career.lastSummary = undefined; Game.saveCareer(career); render(); };
-        const decline = document.querySelector('#decline');
-        if (decline)
-            decline.onclick = () => { Game.declineOffer(career); career.lastSummary = undefined; Game.saveCareer(career); render(); };
-        const next = $('#next');
-        next.onclick = () => { career.lastSummary = undefined; Game.saveCareer(career); render(); };
+        const s=career.lastSummary,p=s.player,r=s.rival,goalie=career.position==='GOL',rec=career.rivalryRecord||{player:0,rival:0,draws:0};
+        const rivalText=s.rivalryWinner==='player'?`Você levou a melhor sobre ${escapeHtml(career.rival.name)} nesta temporada.`:s.rivalryWinner==='rival'?`${escapeHtml(career.rival.name)} venceu a comparação desta temporada.`:'A disputa com seu rival terminou empatada nesta temporada.';
+        const movement=p.roleAtStart===p.nextRole?`Você permanece como ${p.nextRole}.`:`Seu status mudou de ${p.roleAtStart} para ${p.nextRole}.`;
+        app().innerHTML=`<div class="shell"><div class="brand">⚽ <strong>FutLife</strong><span>V0.2</span></div>${playerHeader()}<section class="season-verdict ${s.verdict.tone}"><span class="eyebrow">TEMPORADA ${p.yearLabel}</span><h1>${s.verdict.title}</h1><div class="rating-big">${p.rating.toFixed(2)}</div><p>${s.verdict.text}</p><small>${p.clubName} · ${p.leaguePosition}º no campeonato</small></section>
+        <div class="metrics">${metric('Jogos',p.games)}${metric('Titular',p.starts)}${goalie?metric('Defesas',p.saves??0):metric('Gols',p.goals)}${goalie?metric('% defesas',`${p.savePct}%`):metric('Assistências',p.assists)}${goalie?metric('Gols sofridos',p.goalsConceded):metric('Desarmes',p.tackles)}${metric('Clean sheets',p.cleanSheets)}${metric('Amarelos',p.yellowCards)}${metric('Vermelhos',p.redCards)}</div>
+        <section class="card"><div class="section-title"><div><span class="eyebrow">EVOLUÇÃO</span><h2>OVR ${p.overallStart} → ${p.overallEnd}</h2></div><span class="pill">Reputação ${p.reputationStart} → ${p.reputationEnd}</span></div>${attributeCards(career)}<p class="muted">${s.developmentText.join(' · ')}</p></section>
+        <section class="card club-review"><span class="eyebrow">AVALIAÇÃO DO CLUBE</span><h2>${s.clubDecision.title}</h2><p>${s.clubDecision.text}</p><div class="review-row"><span>${movement}</span><strong>Confiança ${career.coachTrust}/100</strong></div></section>
+        <div class="grid2"><section class="card"><span class="eyebrow">TÍTULOS</span>${p.titles.length?`<ul class="award-list">${p.titles.map(x=>`<li>🏆 ${x}</li>`).join('')}</ul>`:'<p class="muted">Nenhum título nesta temporada.</p>'}</section><section class="card"><span class="eyebrow">PRÊMIOS</span>${p.awards.length?`<ul class="award-list">${p.awards.map(x=>`<li>⭐ ${x}</li>`).join('')}</ul>`:'<p class="muted">Nenhum prêmio individual.</p>'}</section></div>
+        <section class="card"><div class="section-title"><div><span class="eyebrow">RIVALIDADE · ${p.yearLabel}</span><h2>${rivalText}</h2></div><div class="rival-score"><b>${rec.player}</b><span>×</span><b>${rec.rival}</b></div></div><div class="compare"><div><strong>${escapeHtml(career.name)}</strong><span>OVR ${p.overallEnd}</span><b>${p.rating.toFixed(2)}</b><small>${p.goals} G · ${p.assists} A</small></div><div class="versus">VS</div><div><strong>${escapeHtml(career.rival.name)}</strong><span>OVR ${r.overallEnd}</span><b>${r.rating.toFixed(2)}</b><small>${r.goals} G · ${r.assists} A</small></div></div></section>
+        ${s.clubDecision.type==='release'?releaseHtml(s.clubDecision):''}
+        ${s.transferOffer?`<section class="card offer"><span class="eyebrow">MERCADO DA BOLA</span><h2>${Game.clubById(s.transferOffer.clubId).flag} ${s.transferOffer.clubName}</h2><p>${Game.clubById(s.transferOffer.clubId).league} · força ${s.transferOffer.strength} · prestígio ${s.transferOffer.prestige}</p><p>${s.transferOffer.reason}</p><div class="actions"><button id="accept" class="primary">Aceitar proposta</button><button id="decline">Continuar no ${escapeHtml(p.clubName)}</button></div></section>`:''}
+        ${s.clubDecision.type!=='release'?`<button id="next" class="primary wide" ${s.transferOffer?'disabled':''}>Seguir para a próxima temporada</button>`:''}</div>`;
+        if($('#accept')) $('#accept').onclick=()=>{Game.acceptOffer(career);career.lastSummary=undefined;Game.saveCareer(career);render();};
+        if($('#decline')) $('#decline').onclick=()=>{Game.declineOffer(career);career.lastSummary=undefined;Game.saveCareer(career);render();};
+        if($('#next')) $('#next').onclick=()=>{career.lastSummary=undefined;Game.saveCareer(career);render();};
+        document.querySelectorAll('.release-choice').forEach(b=>b.onclick=()=>{Game.chooseReleaseDestination(career,b.dataset.club);Game.saveCareer(career);render();});
     }
-    function historyHtml(history) {
-        const rows = history.slice().reverse().map(s => `<tr><td>${s.yearLabel}</td><td>${s.clubName}</td><td>${s.overallEnd}</td><td>${s.goals}</td><td>${s.assists}</td><td>${s.rating.toFixed(2)}</td></tr>`).join('');
-        return `<section class="card"><span class="eyebrow">HISTÓRICO</span><div class="table-wrap"><table><thead><tr><th>Temporada</th><th>Clube</th><th>OVR</th><th>G</th><th>A</th><th>Nota</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
-    }
-    document.addEventListener('DOMContentLoaded', initUI);
+    function releaseHtml(decision){return `<section class="card release"><span class="eyebrow">NOVO DESTINO</span><h2>Escolha onde recomeçar</h2><p>Seu vínculo terminou. Estes clubes demonstraram interesse.</p><div class="club-offers">${decision.options.map(id=>{const c=Game.clubById(id);const role=Game.determineRole(career.overall,c,career.lastRating,50);return `<button class="club-offer release-choice" data-club="${id}"><div><strong>${c.flag} ${c.name}</strong><span>${c.league}</span></div><div class="offer-meta"><small>Força ${c.strength}</small><b>${role}</b></div></button>`}).join('')}</div></section>`;}
+    function historyHtml(history){const rows=history.slice().reverse().map(s=>`<tr><td>${s.yearLabel}</td><td>${s.clubName}</td><td>${s.overallEnd}</td><td>${s.role||'—'}</td><td>${s.goals}</td><td>${s.assists}</td><td>${s.rating.toFixed(2)}</td><td>${s.leaguePosition}º</td></tr>`).join('');return `<section class="card"><span class="eyebrow">HISTÓRICO DA CARREIRA</span><div class="table-wrap"><table><thead><tr><th>Temporada</th><th>Clube</th><th>OVR</th><th>Status</th><th>G</th><th>A</th><th>Nota</th><th>Liga</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;}
+    document.addEventListener('DOMContentLoaded',initUI);
 })(Game || (Game = {}));
